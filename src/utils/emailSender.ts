@@ -16,6 +16,8 @@ export const sendEmail = async (mailOptions: MailOptions) => {
       user: "info@urbania-custom.com",
       pass: "UrbaniaInfo2025!!",
     },
+    logger: true, // Habilitar logs detallados
+    debug: true, // Habilitar modo debug
   });
 
   const fullMailOptions = {
