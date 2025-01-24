@@ -8,6 +8,10 @@ export interface MailOptions {
 }
 
 export const sendEmail = async (mailOptions: MailOptions) => {
+  console.log('Enviando correo...');
+  // Print vercel env variables
+  console.log('Vercel env variables:', process.env);
+  
   const transporter = nodemailer.createTransport({
     host: "smtp.hostinger.com",
     port: 465,
