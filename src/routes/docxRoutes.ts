@@ -69,7 +69,10 @@ router.post('/generateDocx', async (req: Request, res: Response): Promise<void> 
                 <p>Adjunto encontrará su contrato de personalización.</p>
                 <p>Si tiene alguna consulta o requiere asistencia, no dude en ponerse en contacto con nosotros.</p>
                 <p><strong>Atentamente,<br>Equipo Urbania</strong></p>
-                <a href="mailto:soporte@urbania.com" style="background-color: #0056b3; color: white; padding: 10px 20px; text-decoration: none; border-radius: 5px;">
+
+                //Signature aqui con <img src="cid:urbania_logo" alt="" />
+
+                <a href="mailto:personalizaciones@urbania.cr" style="background-color: #0056b3; color: white; padding: 10px 20px; text-decoration: none; border-radius: 5px;">
                 Contactar Soporte
                 </a>
             `,
