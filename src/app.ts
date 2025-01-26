@@ -9,17 +9,15 @@ dotenv.config();
 connectDB();
 
 const app = express();
-const allowedOrigins = [
-    "http://localhost:5173", // Desarrollo local
-    "https://www.urbania-custom.com", // Producción
-  ];
+
 
 app.use(cors({
-    origin: allowedOrigins,
-    methods: "GET,POST,PUT,DELETE",
-    allowedHeaders: "Content-Type,Authorization",
-    credentials: true,
-  }));
+  origin: ["https://www.urbania-custom.com", "http://localhost:5173"],  // Agregar producción y desarrollo
+  methods: ["GET", "POST", "PUT", "DELETE"],
+  allowedHeaders: ["Content-Type", "Authorization"],
+  credentials: true,
+}));
+  
 app.options("*", cors());  
 app.use((req, res, next) => {
     res.header("Access-Control-Allow-Origin", "https://www.urbania-custom.com");
