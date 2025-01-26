@@ -1,6 +1,6 @@
 {
   "compilerOptions": {
-    "outDir": "public", // El directorio donde se guardará el build
+    "outDir": "dist", // El directorio donde se guardará el build
     "target": "ES2020",
     "module": "CommonJS",
     "strict": true,
