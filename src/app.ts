@@ -9,14 +9,25 @@ dotenv.config();
 connectDB();
 
 const app = express();
+const allowedOrigins = [
+    "http://localhost:5173", // Desarrollo local
+    "https://www.urbania-custom.com", // Producción
+  ];
 
-// Configurar CORS solo para "https://www.urbania-custom.com/"
 app.use(cors({
-  origin: "*",
-  methods: "GET,POST,PUT,DELETE",
-  allowedHeaders: "Content-Type,Authorization",
-  credentials: true,
-}));
+    origin: allowedOrigins,
+    methods: "GET,POST,PUT,DELETE",
+    allowedHeaders: "Content-Type,Authorization",
+    credentials: true,
+  }));
+app.options("*", cors());  
+app.use((req, res, next) => {
+    res.header("Access-Control-Allow-Origin", "https://www.urbania-custom.com");
+    res.header("Access-Control-Allow-Methods", "GET,POST,PUT,DELETE");
+    res.header("Access-Control-Allow-Headers", "Content-Type, Authorization");
+    res.header("Access-Control-Allow-Credentials", "true");
+    next();
+});
 
 app.use(express.json());
 app.use('/api/pins', pinRoutes);
