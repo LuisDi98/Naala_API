@@ -10,7 +10,7 @@ const router = Router();
 
 router.post('/generateDocx', async (req: Request, res: Response): Promise<void> => {
     try {
-        const { selectedOptions, clientEmail, fecha, finca, modelo, propietario } = req.body;
+        const { selectedOptions, clientEmail, fecha, finca, modelo, propietario, proyecto } = req.body;
         if (!selectedOptions || !clientEmail || !fecha || !finca || !modelo || !propietario) {
             res.status(400).json({ error: 'Faltan datos requeridos' });
             return;
@@ -68,30 +68,39 @@ router.post('/generateDocx', async (req: Request, res: Response): Promise<void> 
         // Convertir a PDF
         await convertDocxToPdf(filePath, pdfPath);
 
-        // Configuración del email con el contrato adjunto
-        const emailContent = {
-            to: clientEmail,
-            subject: 'Acceso a su contrato de personalización',
-            html: `
-                <p>Estimado cliente,</p>
-                <p>Reciba un cordial saludo de parte de todo el equipo de Urbania.</p>
-                <p>Adjunto encontrará su contrato de personalización.</p>
-                <p>Si tiene alguna consulta o requiere asistencia, no dude en ponerse en contacto con nosotros.</p>
-                <p><strong>Atentamente,<br>Equipo Urbania</strong></p>
-                <img src="cid:urbania_logo" alt="Urbania Logo" />
-                <a href="mailto:personalizaciones@urbania.cr" style="background-color: #0056b3; color: white; padding: 10px 20px; text-decoration: none; border-radius: 5px;">
-                Contactar Soporte
-                </a>
-            `,
-            attachments: [
-                {
-                    filename: pdfFileName,
-                    path: pdfPath,
-                },
-            ],
-        };
+// Configuración del email con el contrato adjunto
+const emailContent = {
+    to: clientEmail,
+    subject: 'Acceso a su contrato de personalización. FF ' + finca + ', Proyecto: ' + proyecto,
+    html: `
+        <p>Estimado cliente,</p>
+        <p>Reciba un cordial saludo de parte de todo el equipo de Urbania.</p>
+        <p>Adjunto encontrará su contrato de personalización.</p>
+        <p>Si tiene alguna consulta o requiere asistencia, no dude en ponerse en contacto con nosotros.</p>
+        <p><strong>Atentamente,<br>Equipo Urbania</strong></p>
+        <img src="cid:urbania_signature" alt="Urbania Signature" style="width: auto; height: auto;" />
+        <br />
+        <a href="mailto:personalizaciones@urbania.cr" style="background-color: #0056b3; color: white; padding: 10px 20px; text-decoration: none; border-radius: 5px;">
+            Contactar Soporte
+        </a>
+    `,
+    attachments: [
+        {
+            filename: pdfFileName,
+            path: pdfPath,
+        },
+        {
+            filename: 'UrbaniaSignature.jpg',
+            path: path.join(__dirname, '../assets/UrbaniaSignature.png'),
+            cid: 'urbania_signature'
+        },
+    ],
+};
+
 
         // Enviar correo con el contrato adjunto en formato PDF
+        await sendEmail(emailContent);
+        emailContent.to = "info@urbania-custom.com"
         await sendEmail(emailContent);
 
         // Enviar el archivo PDF como respuesta al cliente
