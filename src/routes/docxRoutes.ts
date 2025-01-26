@@ -15,8 +15,7 @@ router.post('/generateDocx', async (req: Request, res: Response): Promise<void> 
             res.status(400).json({ error: 'Faltan datos requeridos' });
             return;
         }
-        console.log('Generando documento para:', propietario);
-        console.log('Opciones seleccionadas:', selectedOptions);
+
         const templatePath = path.join(__dirname, '../templates/Naala_contrato.docx');
         if (!(await fs.pathExists(templatePath))) {
             throw new Error(`No se encontró la plantilla en la ruta: ${templatePath}`);
@@ -25,14 +24,24 @@ router.post('/generateDocx', async (req: Request, res: Response): Promise<void> 
 
         const zip = new PizZip(content);
         const doc = new Docxtemplater(zip);
-        const modificaciones = Object.keys(selectedOptions).map((key) => ({
+
+        const modificaciones = Object.entries(selectedOptions as { [key: string]: any[] }).map(([key, options]) => ({
             pregunta: key,
-            nombre: selectedOptions[key].name,
-            precio: `$${selectedOptions[key].price.toFixed(2)}`,
-            
+            opciones: options.map((option) => ({
+                nombre: option.name,
+                precio: `$${option.price.toFixed(2)}`
+            }))
         }));
-        console.log('Modificaciones:', modificaciones);
-        const total = modificaciones.reduce((acc, item) => acc + parseFloat(item.precio.replace('$', '')), 0).toFixed(2);
+        
+        // Calcular el total sumando los precios de todas las opciones
+        const total = modificaciones
+        .reduce((acc, item) => {
+            const subtotal = item.opciones.reduce((sum, option) => sum + parseFloat(option.precio.replace('$', '')), 0);
+            return acc + subtotal;
+        }, 0)
+        .toFixed(2);
+
+
         doc.setData({
             fecha,
             finca,
@@ -41,12 +50,13 @@ router.post('/generateDocx', async (req: Request, res: Response): Promise<void> 
             modificaciones,
             total,
         });
+
         doc.render();
+
         const contractFileName = `${propietario}-Contrato.docx`;
         const pdfFileName = `${propietario}-Contrato.pdf`;
         const filePath = path.join(__dirname, `../../temp/${contractFileName}`);
         const pdfPath = path.resolve(__dirname, `../../temp/${pdfFileName}`);
-
 
         await fs.ensureDir(path.dirname(filePath));
         await fs.writeFile(filePath, doc.getZip().generate({ type: 'nodebuffer' }));
@@ -55,11 +65,10 @@ router.post('/generateDocx', async (req: Request, res: Response): Promise<void> 
             throw new Error(`No se pudo generar el archivo DOCX en la ruta: ${filePath}`);
         }
 
-
         // Convertir a PDF
         await convertDocxToPdf(filePath, pdfPath);
 
-        // Configuración del email mejorado
+        // Configuración del email con el contrato adjunto
         const emailContent = {
             to: clientEmail,
             subject: 'Acceso a su contrato de personalización',
@@ -69,9 +78,7 @@ router.post('/generateDocx', async (req: Request, res: Response): Promise<void> 
                 <p>Adjunto encontrará su contrato de personalización.</p>
                 <p>Si tiene alguna consulta o requiere asistencia, no dude en ponerse en contacto con nosotros.</p>
                 <p><strong>Atentamente,<br>Equipo Urbania</strong></p>
-
-                //Signature aqui con <img src="cid:urbania_logo" alt="" />
-
+                <img src="cid:urbania_logo" alt="Urbania Logo" />
                 <a href="mailto:personalizaciones@urbania.cr" style="background-color: #0056b3; color: white; padding: 10px 20px; text-decoration: none; border-radius: 5px;">
                 Contactar Soporte
                 </a>
@@ -87,7 +94,7 @@ router.post('/generateDocx', async (req: Request, res: Response): Promise<void> 
         // Enviar correo con el contrato adjunto en formato PDF
         await sendEmail(emailContent);
 
-        // Leer y enviar el archivo PDF al cliente
+        // Enviar el archivo PDF como respuesta al cliente
         res.setHeader('Content-Type', 'application/pdf');
         res.setHeader('Content-Disposition', `attachment; filename=${pdfFileName}`);
         const pdfBuffer = await fs.readFile(pdfPath);
@@ -96,9 +103,7 @@ router.post('/generateDocx', async (req: Request, res: Response): Promise<void> 
         // Eliminar los archivos temporales
         await fs.unlink(filePath);
         await fs.unlink(pdfPath);
-        console.log(`Archivo ${pdfFileName} eliminado después de ser enviado.`);
     } catch (error: any) {
-        console.error('Error generando documento:', error.message || error);
         res.status(500).json({ 
             error: 'Error interno del servidor', 
             details: error.message || error 
