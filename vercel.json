@@ -1,4 +1,16 @@
 {
+  "builds": [
+    {
+      "src": "public/server.js",
+      "use": "@vercel/node"
+    }
+  ],
+  "routes": [
+    {
+      "src": "/api/(.*)",
+      "dest": "public/server.js"
+    }
+  ],
   "headers": [
     {
       "source": "/api/(.*)",
